@@ -45,6 +45,8 @@ export const AdminPanel = () => {
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
+    const previousStatus = orders.find(o => o.id === orderId)?.status;
+
     const { error } = await supabase
       .from('orders')
       .update({ status, updated_at: new Date().toISOString() })
@@ -52,9 +54,35 @@ export const AdminPanel = () => {
 
     if (error) {
       console.error('Error updating order:', error);
-    } else {
-      fetchOrders();
+      return;
     }
+
+    if (status === 'completed' && previousStatus !== 'completed') {
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('user_id, total_amount, created_at')
+        .eq('id', orderId)
+        .single();
+
+      if (orderData) {
+        const { error: deductionError } = await supabase
+          .from('employee_deductions')
+          .insert({
+            user_id: orderData.user_id,
+            order_id: orderId,
+            amount: orderData.total_amount,
+            deduction_date: new Date().toISOString().split('T')[0],
+            deduction_month: new Date(orderData.created_at).toISOString().slice(0, 7) + '-01',
+            description: `Order #${orderId.slice(0, 8)} - Meal deduction`,
+          });
+
+        if (deductionError) {
+          console.error('Error creating deduction:', deductionError);
+        }
+      }
+    }
+
+    fetchOrders();
   };
 
   const deleteMenuItem = async (id: string) => {
@@ -186,56 +214,111 @@ export const AdminPanel = () => {
         <StockManagement />
       ) : (
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Recent Orders
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Order Management</h2>
+            <div className="flex gap-2 text-sm">
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium">
+                {orders.filter(o => o.status === 'pending').length} Pending
+              </span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
+                {orders.filter(o => o.status === 'preparing').length} Preparing
+              </span>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full font-medium">
+                {orders.filter(o => o.status === 'ready').length} Ready
+              </span>
+            </div>
+          </div>
 
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      Order #{order.id.slice(0, 8)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleString()}
-                    </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {orders.map((order) => {
+              const statusColors = {
+                pending: 'bg-yellow-50 border-yellow-200',
+                preparing: 'bg-blue-50 border-blue-200',
+                ready: 'bg-green-50 border-green-200',
+                completed: 'bg-gray-50 border-gray-200',
+                cancelled: 'bg-red-50 border-red-200',
+              };
+
+              const statusBadgeColors = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                preparing: 'bg-blue-100 text-blue-800',
+                ready: 'bg-green-100 text-green-800',
+                completed: 'bg-gray-100 text-gray-800',
+                cancelled: 'bg-red-100 text-red-800',
+              };
+
+              return (
+                <div
+                  key={order.id}
+                  className={`rounded-xl shadow-sm p-5 border-2 transition-all hover:shadow-md ${statusColors[order.status as keyof typeof statusColors]}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold text-gray-900 text-lg">
+                        #{order.id.slice(0, 8).toUpperCase()}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {new Date(order.created_at).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusBadgeColors[order.status as keyof typeof statusBadgeColors]}`}>
+                      {order.status}
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-800">
+
+                  <div className="mb-4 pb-4 border-b">
+                    <p className="text-2xl font-bold text-gray-900">
                       ₹{order.total_amount.toFixed(2)}
                     </p>
+                    {order.pickup_time && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Pickup: {new Date(order.pickup_time).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
+                  </div>
+
+                  {order.notes && (
+                    <div className="mb-4 p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Notes:</p>
+                      <p className="text-sm text-gray-700">{order.notes}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-700 block">
+                      Update Status
+                    </label>
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                    >
+                      <option value="pending">🕐 Pending</option>
+                      <option value="preparing">👨‍🍳 Preparing</option>
+                      <option value="ready">✅ Ready for Pickup</option>
+                      <option value="completed">✔️ Completed</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                    </select>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Status:</span>
-                  <select
-                    value={order.status}
-                    onChange={(e) =>
-                      updateOrderStatus(order.id, e.target.value)
-                    }
-                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="ready">Ready</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                {order.notes && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Notes:</span> {order.notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {orders.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No orders yet</p>
+            </div>
+          )}
         </div>
       )}
 

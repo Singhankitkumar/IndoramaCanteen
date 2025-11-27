@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Ingredient } from '../lib/types';
-import { AlertCircle, Plus, Minus, Package, TrendingDown } from 'lucide-react';
+import { AlertCircle, Plus, Minus, Package, TrendingDown, Upload, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 type StockAdjustment = {
   id: string;
@@ -27,6 +28,8 @@ export const StockManagement = () => {
   const [showAdjustmentForm, setShowAdjustmentForm] = useState(false);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [uploadMessage, setUploadMessage] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchIngredients();
@@ -142,6 +145,136 @@ export const StockManagement = () => {
     }
   };
 
+  const downloadTemplate = () => {
+    const template = [
+      ['Ingredient Name', 'New Stock Quantity', 'Unit', 'Reason for Update'],
+      ['Basmati Rice', '50', 'kg', 'Stock replenishment'],
+      ['Chicken Breast', '25', 'kg', 'Weekly delivery'],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Stock Template');
+    XLSX.writeFile(wb, 'stock_update_template.xlsx');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadMessage('Processing file...');
+    setLoading(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+      if (jsonData.length === 0) {
+        setUploadMessage('No data found in file');
+        setLoading(false);
+        return;
+      }
+
+      const { data: currentUser } = await supabase.auth.getUser();
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const row of jsonData) {
+        const ingredientName = row['Ingredient Name'] || row['ingredient_name'];
+        const newStock = parseFloat(row['New Stock Quantity'] || row['new_stock_quantity'] || row['quantity']);
+        const reason = row['Reason for Update'] || row['reason'] || 'Bulk upload';
+
+        if (!ingredientName || isNaN(newStock)) {
+          errorCount++;
+          continue;
+        }
+
+        const ingredient = ingredients.find(
+          (i) => i.name.toLowerCase() === ingredientName.toLowerCase()
+        );
+
+        if (!ingredient) {
+          errorCount++;
+          continue;
+        }
+
+        const previousStock = ingredient.current_stock;
+
+        const { error: adjustmentError } = await supabase
+          .from('stock_adjustments')
+          .insert({
+            ingredient_id: ingredient.id,
+            adjustment_quantity: Math.abs(newStock - previousStock),
+            adjustment_type: newStock > previousStock ? 'add' : 'subtract',
+            reason: reason,
+            previous_stock: previousStock,
+            new_stock: newStock,
+            adjusted_by: currentUser?.user?.id,
+          });
+
+        if (adjustmentError) {
+          errorCount++;
+          continue;
+        }
+
+        const { error: updateError } = await supabase
+          .from('ingredients')
+          .update({
+            current_stock: newStock,
+            last_restocked_at: new Date().toISOString(),
+          })
+          .eq('id', ingredient.id);
+
+        if (updateError) {
+          errorCount++;
+          continue;
+        }
+
+        await supabase.from('stock_history').insert({
+          ingredient_id: ingredient.id,
+          action: 'Bulk Upload',
+          quantity: newStock,
+          notes: reason,
+          created_by: currentUser?.user?.id,
+        });
+
+        successCount++;
+      }
+
+      setUploadMessage(
+        `Upload complete! ${successCount} updated, ${errorCount} failed.`
+      );
+      await fetchIngredients();
+      await fetchAdjustments();
+    } catch (error) {
+      console.error('Error processing file:', error);
+      setUploadMessage('Failed to process file. Please check format.');
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const exportCurrentStock = () => {
+    const exportData = ingredients.map((ing) => ({
+      'Ingredient Name': ing.name,
+      'Current Stock': ing.current_stock,
+      'Unit': ing.unit,
+      'Low Stock Threshold': ing.low_stock_threshold,
+      'Cost per Unit': ing.cost_per_unit,
+      'Status': ing.current_stock <= ing.low_stock_threshold ? 'LOW STOCK' : 'OK',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Current Stock');
+    XLSX.writeFile(wb, `stock_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const filteredIngredients = ingredients.filter((ing) =>
     ing.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -182,8 +315,55 @@ export const StockManagement = () => {
           placeholder="Search ingredients..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4"
         />
+
+        <div className="flex flex-wrap gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileUpload}
+            className="hidden"
+            id="stock-upload"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Excel
+          </button>
+          <button
+            onClick={downloadTemplate}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Download Template
+          </button>
+          <button
+            onClick={exportCurrentStock}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export Current Stock
+          </button>
+        </div>
+
+        {uploadMessage && (
+          <div
+            className={`mt-4 px-4 py-2 rounded-lg text-sm ${
+              uploadMessage.includes('complete') || uploadMessage.includes('Successfully')
+                ? 'bg-green-50 text-green-700'
+                : uploadMessage.includes('Failed') || uploadMessage.includes('error')
+                ? 'bg-red-50 text-red-700'
+                : 'bg-blue-50 text-blue-700'
+            }`}
+          >
+            {uploadMessage}
+          </div>
+        )}
       </div>
 
       {/* Low Stock Alert */}

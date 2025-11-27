@@ -44,7 +44,14 @@ export const PartyOrders = () => {
       (ordersData || []).map(async (order) => {
         const { data: itemsData } = await supabase
           .from('party_order_items')
-          .select('*')
+          .select(`
+            *,
+            menu_items:menu_item_id (
+              id,
+              name,
+              price
+            )
+          `)
           .eq('party_order_id', order.id);
 
         return {
@@ -159,10 +166,17 @@ export const PartyOrders = () => {
 
           <div className="space-y-2 mb-4">
             <h4 className="text-sm font-medium text-gray-700">Items:</h4>
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm text-gray-600">
-                <span>Item #{item.menu_item_id.slice(0, 8)}</span>
-                <span>Qty: {item.quantity}</span>
+            {order.items.map((item: any) => (
+              <div key={item.id} className="flex justify-between text-sm">
+                <span className="text-gray-800 font-medium">
+                  {item.menu_items?.name || 'Unknown Item'}
+                </span>
+                <div className="text-right">
+                  <span className="text-gray-600">Qty: {item.quantity}</span>
+                  <span className="text-gray-500 ml-3">
+                    ₹{((item.menu_items?.price || 0) * item.quantity).toFixed(2)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

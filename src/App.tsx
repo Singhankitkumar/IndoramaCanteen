@@ -293,9 +293,21 @@ function AppContent() {
           if (!user) return;
 
           const cartItems = Array.from(items.entries());
+
+          const { data: menuItems, error: menuError } = await supabase
+            .from('menu_items')
+            .select('id, price')
+            .in('id', cartItems.map(([itemId]) => itemId));
+
+          if (menuError) {
+            console.error('Error fetching menu items:', menuError);
+            alert('Failed to fetch menu items. Please try again.');
+            return;
+          }
+
           const totalAmount = cartItems.reduce((sum, [itemId, qty]) => {
-            const cartItem = Array.from(cart.values()).find(c => c.item.id === itemId);
-            return sum + (cartItem?.item.price || 0) * qty;
+            const menuItem = menuItems?.find(m => m.id === itemId);
+            return sum + (menuItem?.price || 0) * qty;
           }, 0);
 
           const { data: partyOrder, error: orderError } = await supabase

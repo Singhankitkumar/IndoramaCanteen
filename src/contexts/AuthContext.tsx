@@ -42,8 +42,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const checkForPasswordRecovery = () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      return type === 'recovery';
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       (async () => {
+        if (checkForPasswordRecovery()) {
+          setUser(session?.user ?? null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         setUser(session?.user ?? null);
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);
@@ -53,8 +66,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })();
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
+        if (event === 'PASSWORD_RECOVERY') {
+          setUser(session?.user ?? null);
+          setProfile(null);
+          return;
+        }
+
         setUser(session?.user ?? null);
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);

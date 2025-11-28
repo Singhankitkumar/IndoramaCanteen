@@ -39,7 +39,12 @@ function AppContent() {
     );
   }
 
-  if (!user) {
+  const isPasswordRecovery = () => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    return hashParams.get('type') === 'recovery';
+  };
+
+  if (!user || (user && !profile && isPasswordRecovery())) {
     return <Auth />;
   }
 

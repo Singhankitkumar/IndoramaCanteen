@@ -68,12 +68,16 @@ export const Auth = () => {
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
 
-        setSuccess('Password updated successfully! You can now sign in with your new password.');
+        await supabase.auth.signOut();
+
+        setSuccess('Password updated successfully! Redirecting to login...');
         setTimeout(() => {
           setIsResetPassword(false);
           setPassword('');
           setConfirmPassword('');
+          setEmail('');
           window.location.hash = '';
+          window.location.reload();
         }, 2000);
       } else if (isForgotPassword) {
         if (!email.endsWith('@indorama.com')) {

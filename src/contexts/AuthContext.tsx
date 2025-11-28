@@ -88,23 +88,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, employeeId: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email,
-        full_name: fullName,
-        employee_id: employeeId,
-        is_admin: false,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            employee_id: employeeId,
+            is_admin: false,
+          },
+        },
       });
 
-      if (profileError) throw profileError;
+      if (error) throw error;
+
+      if (data.user && !data.session) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          email,
+          full_name: fullName,
+          employee_id: employeeId,
+          is_admin: false,
+        });
+
+        if (profileError && profileError.code !== '23505') {
+          throw profileError;
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes('duplicate key') || err.message.includes('already registered')) {
+          throw new Error('This employee ID is already registered. Please use a different employee ID.');
+        }
+      }
+      throw err;
     }
   };
 

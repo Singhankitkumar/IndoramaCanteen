@@ -38,6 +38,7 @@ export type DailyMenu = {
 
 export type PartyOrder = {
   id: string;
+  order_number?: string;
   user_id: string;
   department: string;
   party_date: string;

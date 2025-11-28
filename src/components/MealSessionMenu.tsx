@@ -40,46 +40,28 @@ export const MealSessionMenu = ({
 
   const fetchSessionMenu = async () => {
     setLoading(true);
-    const today = new Date().toISOString().split('T')[0];
-
-    const { data: dailyMenuData, error: dailyMenuError } = await supabase
-      .from('daily_menu')
-      .select('menu_item_id, available')
-      .eq('menu_date', today)
-      .eq('session_id', session.id);
-
-    if (dailyMenuError) {
-      console.error('Error fetching daily menu:', dailyMenuError);
-      setLoading(false);
-      return;
-    }
-
-    if (!dailyMenuData || dailyMenuData.length === 0) {
-      setMenuItems([]);
-      setLoading(false);
-      return;
-    }
-
-    const availableMenuItemIds = dailyMenuData
-      .filter(dm => dm.available)
-      .map(dm => dm.menu_item_id);
-
-    if (availableMenuItemIds.length === 0) {
-      setMenuItems([]);
-      setLoading(false);
-      return;
-    }
 
     const { data: items, error: itemsError } = await supabase
       .from('menu_items')
       .select('*')
-      .in('id', availableMenuItemIds)
       .eq('available', true);
 
     if (itemsError) {
       console.error('Error fetching menu items:', itemsError);
+      setMenuItems([]);
     } else {
-      setMenuItems(items || []);
+      const sessionCategoryMap: { [key: string]: string[] } = {
+        'Breakfast': ['breakfast', 'beverages'],
+        'Lunch': ['lunch', 'Bread', 'beverages'],
+        'Dinner': ['dinner', 'Bread', 'snacks', 'beverages'],
+      };
+
+      const allowedCategories = sessionCategoryMap[session.name] || [];
+      const filteredItems = (items || []).filter(item =>
+        allowedCategories.includes(item.category)
+      );
+
+      setMenuItems(filteredItems);
     }
     setLoading(false);
   };

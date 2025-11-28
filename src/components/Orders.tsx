@@ -109,6 +109,9 @@ export const Orders = () => {
         <div key={order.id} className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
+              <p className="text-lg font-bold text-gray-900 mb-2">
+                {(order as any).order_number || `#${order.id.slice(0, 8)}`}
+              </p>
               <div className="flex items-center gap-2 mb-2">
                 {getStatusIcon(order.status)}
                 <span

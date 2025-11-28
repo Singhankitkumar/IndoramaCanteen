@@ -131,6 +131,9 @@ export const PartyOrders = () => {
         <div key={order.id} className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
+              <p className="text-lg font-bold text-gray-900 mb-1">
+                {order.order_number || `PO-${order.id.slice(0, 8)}`}
+              </p>
               <h3 className="font-semibold text-gray-800 text-lg">
                 {order.department} Party
               </h3>

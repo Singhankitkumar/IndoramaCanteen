@@ -4,22 +4,29 @@ import { UtensilsCrossed } from 'lucide-react';
 
 export const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        await resetPassword(email);
+        setSuccess('Password reset instructions sent to your email. Please check your inbox.');
+        setEmail('');
+      } else if (isSignUp) {
         await signUp(email, password, fullName, employeeId);
       } else {
         await signIn(email, password);
@@ -41,11 +48,11 @@ export const Auth = () => {
           Indorama Canteen
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          {isSignUp ? 'Create your account' : 'Welcome back'}
+          {isForgotPassword ? 'Reset your password' : isSignUp ? 'Create your account' : 'Welcome back'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
+          {isSignUp && !isForgotPassword && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -87,22 +94,30 @@ export const Auth = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              required
-            />
-          </div>
+          {!isForgotPassword && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
+              />
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 text-green-600 px-4 py-2 rounded-lg text-sm">
+              {success}
             </div>
           )}
 
@@ -111,13 +126,31 @@ export const Auth = () => {
             disabled={loading}
             className="w-full bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading ? 'Please wait...' : isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Sign Up' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
+          {!isForgotPassword && (
+            <button
+              onClick={() => {
+                setIsForgotPassword(true);
+                setIsSignUp(false);
+                setError('');
+                setSuccess('');
+              }}
+              className="text-orange-600 hover:text-orange-700 text-sm font-medium block w-full"
+            >
+              Forgot Password?
+            </button>
+          )}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setIsForgotPassword(false);
+              setError('');
+              setSuccess('');
+            }}
             className="text-orange-600 hover:text-orange-700 text-sm font-medium"
           >
             {isSignUp

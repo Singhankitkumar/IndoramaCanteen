@@ -255,7 +255,7 @@ export const AdminPanel = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="font-bold text-gray-900 text-lg">
-                        #{order.id.slice(0, 8).toUpperCase()}
+                        {(order as any).order_number || `#${order.id.slice(0, 8).toUpperCase()}`}
                       </p>
                       <p className="text-xs text-gray-600 mt-1">
                         {new Date(order.created_at).toLocaleString('en-US', {

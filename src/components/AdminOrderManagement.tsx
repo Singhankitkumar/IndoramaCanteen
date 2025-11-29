@@ -376,30 +376,35 @@ export const AdminOrderManagement = () => {
                         {activeTab === 'general' && (
                           <>
                             <div className="font-medium">{order.order_number}</div>
+                            <div className="text-xs text-blue-600 font-semibold">Emp: {order.ordered_for_employee_id || order.profiles?.employee_id}</div>
                             <div className="text-gray-600">₹{order.total_amount}</div>
                           </>
                         )}
                         {activeTab === 'massage' && (
                           <>
                             <div className="font-medium">{order.massage_services?.name}</div>
+                            <div className="text-xs text-blue-600 font-semibold">Emp: {order.profiles?.employee_id}</div>
                             <div className="text-gray-600">{order.booking_time}</div>
                           </>
                         )}
                         {activeTab === 'beverage' && (
                           <>
                             <div className="font-medium">{order.beverage_items?.name}</div>
+                            <div className="text-xs text-blue-600 font-semibold">Emp: {order.profiles?.employee_id}</div>
                             <div className="text-gray-600">Qty: {order.quantity} - ₹{order.total_amount}</div>
                           </>
                         )}
                         {activeTab === 'party' && (
                           <>
                             <div className="font-medium">{order.order_number}</div>
+                            <div className="text-xs text-blue-600 font-semibold">Emp: {order.profiles?.employee_id}</div>
                             <div className="text-gray-600">{order.department} - {order.estimated_headcount} people</div>
                           </>
                         )}
                         {activeTab === 'estate' && (
                           <>
                             <div className="font-medium">{order.estate_items?.name}</div>
+                            <div className="text-xs text-blue-600 font-semibold">Emp: {order.profiles?.employee_id}</div>
                             <div className="text-gray-600">Qty: {order.quantity} - {order.room_flat}</div>
                           </>
                         )}

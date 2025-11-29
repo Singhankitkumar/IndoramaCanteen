@@ -17,6 +17,8 @@ import { AdminOrderManagement } from './components/AdminOrderManagement';
 import { AdminRoleManagement } from './components/AdminRoleManagement';
 import { WeeklyMenuManagement } from './components/WeeklyMenuManagement';
 import { HomeMealOrders } from './components/HomeMealOrders';
+import { AdminPlaceOrder } from './components/AdminPlaceOrder';
+import { GeneralOrders } from './components/GeneralOrders';
 import { MenuItem, supabase } from './lib/supabase';
 import { PartyOrder } from './lib/types';
 import {
@@ -38,7 +40,7 @@ import {
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'home-meals' | 'admin' | 'reports' | 'admin-orders' | 'admin-roles' | 'weekly-menu'>(
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'home-meals' | 'general-orders' | 'admin' | 'reports' | 'admin-orders' | 'admin-roles' | 'weekly-menu' | 'admin-place-order'>(
     profile?.is_admin ? 'admin' : 'menu'
   );
   const [cart, setCart] = useState<Map<string, { item: MenuItem; quantity: number }>>(new Map());
@@ -270,6 +272,17 @@ function AppContent() {
                   Home Meals
                 </button>
                 <button
+                  onClick={() => setActiveTab('general-orders')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'general-orders'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <FileText className="w-5 h-5" />
+                  General Orders
+                </button>
+                <button
                   onClick={() => setActiveTab('billing')}
                   className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'billing'
@@ -305,6 +318,17 @@ function AppContent() {
                 >
                   <Shield className="w-5 h-5" />
                   Menu Management
+                </button>
+                <button
+                  onClick={() => setActiveTab('admin-place-order')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'admin-place-order'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Place Order
                 </button>
                 <button
                   onClick={() => setActiveTab('admin-orders')}
@@ -370,9 +394,11 @@ function AppContent() {
         {activeTab === 'beverages' && !profile?.is_admin && <Beverages />}
         {activeTab === 'estate' && !profile?.is_admin && <EstateRequests />}
         {activeTab === 'home-meals' && !profile?.is_admin && <HomeMealOrders />}
+        {activeTab === 'general-orders' && !profile?.is_admin && <GeneralOrders />}
         {activeTab === 'billing' && !profile?.is_admin && <BillingStatement />}
         {activeTab === 'reports' && profile?.is_admin && <ConsumptionReports />}
         {activeTab === 'admin' && profile?.is_admin && <AdminPanel />}
+        {activeTab === 'admin-place-order' && profile?.is_admin && <AdminPlaceOrder />}
         {activeTab === 'admin-orders' && profile?.is_admin && <AdminOrderManagement />}
         {activeTab === 'weekly-menu' && profile?.is_admin && <WeeklyMenuManagement />}
         {activeTab === 'admin-roles' && profile?.is_admin && <AdminRoleManagement />}

@@ -19,6 +19,7 @@ import { WeeklyMenuManagement } from './components/WeeklyMenuManagement';
 import { HomeMealOrders } from './components/HomeMealOrders';
 import { AdminPlaceOrder } from './components/AdminPlaceOrder';
 import { GeneralOrders } from './components/GeneralOrders';
+import { UnifiedOrderManagement } from './components/UnifiedOrderManagement';
 import { MenuItem, supabase } from './lib/supabase';
 import { PartyOrder } from './lib/types';
 import {
@@ -399,7 +400,7 @@ function AppContent() {
         {activeTab === 'reports' && profile?.is_admin && <ConsumptionReports />}
         {activeTab === 'admin' && profile?.is_admin && <AdminPanel />}
         {activeTab === 'admin-place-order' && profile?.is_admin && <AdminPlaceOrder />}
-        {activeTab === 'admin-orders' && profile?.is_admin && <AdminOrderManagement />}
+        {activeTab === 'admin-orders' && profile?.is_admin && <UnifiedOrderManagement />}
         {activeTab === 'weekly-menu' && profile?.is_admin && <WeeklyMenuManagement />}
         {activeTab === 'admin-roles' && profile?.is_admin && <AdminRoleManagement />}
       </main>

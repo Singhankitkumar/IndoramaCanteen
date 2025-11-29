@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, MenuItem, Order } from '../lib/supabase';
 import { StockManagement } from './StockManagement';
-import { Plus, Edit2, Trash2, Package, Boxes } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Boxes, X } from 'lucide-react';
 
 export const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'stock'>('menu');

@@ -10,6 +10,10 @@ import { PartyOrderForm } from './components/PartyOrderForm';
 import { PartyOrders } from './components/PartyOrders';
 import { BillingStatement } from './components/BillingStatement';
 import { ConsumptionReports } from './components/ConsumptionReports';
+import { MassageBooking } from './components/MassageBooking';
+import { Beverages } from './components/Beverages';
+import { EstateRequests } from './components/EstateRequests';
+import { AdminOrderManagement } from './components/AdminOrderManagement';
 import { MenuItem, supabase } from './lib/supabase';
 import { PartyOrder } from './lib/types';
 import {
@@ -21,11 +25,15 @@ import {
   Gift,
   FileText,
   BarChart3,
+  Coffee,
+  Sparkles,
+  Home,
+  ClipboardList,
 } from 'lucide-react';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'admin' | 'reports'>('menu');
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'admin' | 'reports' | 'admin-orders'>('menu');
   const [cart, setCart] = useState<Map<string, { item: MenuItem; quantity: number }>>(new Map());
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -175,50 +183,87 @@ function AppContent() {
           </div>
 
           <div className="flex border-t overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('menu')}
-              className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'menu'
-                  ? 'border-b-2 border-orange-600 text-orange-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <UtensilsCrossed className="w-5 h-5" />
-              Menu
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'orders'
-                  ? 'border-b-2 border-orange-600 text-orange-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <History className="w-5 h-5" />
-              My Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('party')}
-              className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'party'
-                  ? 'border-b-2 border-orange-600 text-orange-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <Gift className="w-5 h-5" />
-              Party Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('billing')}
-              className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'billing'
-                  ? 'border-b-2 border-orange-600 text-orange-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <FileText className="w-5 h-5" />
-              Billing
-            </button>
+            {!profile?.is_admin && (
+              <>
+                <button
+                  onClick={() => setActiveTab('menu')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'menu'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <UtensilsCrossed className="w-5 h-5" />
+                  Menu
+                </button>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'orders'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <History className="w-5 h-5" />
+                  My Orders
+                </button>
+                <button
+                  onClick={() => setActiveTab('party')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'party'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Gift className="w-5 h-5" />
+                  Party Orders
+                </button>
+                <button
+                  onClick={() => setActiveTab('massage')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'massage'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Massage
+                </button>
+                <button
+                  onClick={() => setActiveTab('beverages')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'beverages'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Coffee className="w-5 h-5" />
+                  Beverages
+                </button>
+                <button
+                  onClick={() => setActiveTab('estate')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'estate'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Home className="w-5 h-5" />
+                  Estate
+                </button>
+                <button
+                  onClick={() => setActiveTab('billing')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'billing'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <FileText className="w-5 h-5" />
+                  Billing
+                </button>
+              </>
+            )}
             {profile?.is_admin && (
               <>
                 <button
@@ -241,7 +286,18 @@ function AppContent() {
                   }`}
                 >
                   <Shield className="w-5 h-5" />
-                  Admin
+                  Menu Management
+                </button>
+                <button
+                  onClick={() => setActiveTab('admin-orders')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'admin-orders'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  Order Management
                 </button>
               </>
             )}
@@ -250,7 +306,7 @@ function AppContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'menu' && (
+        {activeTab === 'menu' && !profile?.is_admin && (
           <>
             <div className="flex justify-end mb-6">
               <button
@@ -268,11 +324,15 @@ function AppContent() {
             />
           </>
         )}
-        {activeTab === 'orders' && <Orders />}
-        {activeTab === 'party' && <PartyOrders />}
-        {activeTab === 'billing' && <BillingStatement />}
+        {activeTab === 'orders' && !profile?.is_admin && <Orders />}
+        {activeTab === 'party' && !profile?.is_admin && <PartyOrders />}
+        {activeTab === 'massage' && !profile?.is_admin && <MassageBooking />}
+        {activeTab === 'beverages' && !profile?.is_admin && <Beverages />}
+        {activeTab === 'estate' && !profile?.is_admin && <EstateRequests />}
+        {activeTab === 'billing' && !profile?.is_admin && <BillingStatement />}
         {activeTab === 'reports' && profile?.is_admin && <ConsumptionReports />}
         {activeTab === 'admin' && profile?.is_admin && <AdminPanel />}
+        {activeTab === 'admin-orders' && profile?.is_admin && <AdminOrderManagement />}
       </main>
 
       <Cart

@@ -80,3 +80,72 @@ export type ConsumptionLog = {
   consumption_date: string;
   created_at: string;
 };
+
+export type MassageService = {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  price: number;
+  description: string;
+  available: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MassageBooking = {
+  id: string;
+  user_id: string;
+  service_id: string;
+  booking_date: string;
+  booking_time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  price: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BeverageItem = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  available: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BeverageOrder = {
+  id: string;
+  user_id: string;
+  beverage_item_id: string;
+  quantity: number;
+  total_amount: number;
+  status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  order_date: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EstateItem = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  available: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EstateRequest = {
+  id: string;
+  user_id: string;
+  estate_item_id: string;
+  quantity: number;
+  room_flat: string;
+  status: 'requested' | 'approved' | 'issued' | 'rejected';
+  request_date: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};

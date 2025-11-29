@@ -360,15 +360,21 @@ export const Auth = () => {
 
         {verificationMode === 'signup-verify' && (
           <form onSubmit={handleVerifySignUp} className="space-y-4">
-            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">
-              <p><strong>Email:</strong> {email}</p>
-              <p className="text-xs mt-1">Check your email inbox for the OTP code</p>
+            <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 mb-4 border-2 border-blue-200">
+              <p className="font-semibold mb-2">📧 Check Your Email</p>
+              <p className="mb-2"><strong>Sent to:</strong> {email}</p>
+              <div className="bg-white p-2 rounded mt-2 text-xs">
+                <p className="font-semibold text-blue-900 mb-1">Look for the 6-digit code in the email:</p>
+                <p className="text-gray-700">• The code appears in the email body</p>
+                <p className="text-gray-700">• Check spam folder if not received</p>
+                <p className="text-gray-700">• Code expires in 60 minutes</p>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Hash className="w-4 h-4 inline mr-1" />
-                Enter OTP Code
+                Enter 6-Digit OTP Code
               </label>
               <input
                 type="text"
@@ -502,15 +508,21 @@ export const Auth = () => {
 
         {verificationMode === 'password-reset-verify' && (
           <form onSubmit={handleVerifyPasswordReset} className="space-y-4">
-            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">
-              <p><strong>Email:</strong> {email}</p>
-              <p className="text-xs mt-1">Check your email inbox for the OTP code</p>
+            <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 mb-4 border-2 border-blue-200">
+              <p className="font-semibold mb-2">📧 Check Your Email</p>
+              <p className="mb-2"><strong>Sent to:</strong> {email}</p>
+              <div className="bg-white p-2 rounded mt-2 text-xs">
+                <p className="font-semibold text-blue-900 mb-1">Look for the 6-digit code in the email:</p>
+                <p className="text-gray-700">• The code appears in the email body</p>
+                <p className="text-gray-700">• Check spam folder if not received</p>
+                <p className="text-gray-700">• Code expires in 60 minutes</p>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Hash className="w-4 h-4 inline mr-1" />
-                Enter OTP Code
+                Enter 6-Digit OTP Code
               </label>
               <input
                 type="text"

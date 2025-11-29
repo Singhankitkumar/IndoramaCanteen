@@ -74,10 +74,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        shouldCreateUser: true,
         data: {
           full_name: fullName,
           employee_id: employeeId,
         },
+        emailRedirectTo: undefined,
       },
     });
 
@@ -131,6 +133,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw profileError;
       }
     }
+
+    await supabase.auth.signOut();
   };
 
   const signIn = async (email: string, password: string) => {
@@ -147,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       options: {
         shouldCreateUser: false,
+        emailRedirectTo: undefined,
       },
     });
 
@@ -154,7 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPasswordWithOTP = async (email: string, token: string, newPassword: string) => {
-    const { error: verifyError } = await supabase.auth.verifyOtp({
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'email',
@@ -162,11 +167,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (verifyError) throw verifyError;
 
+    if (!verifyData.user) {
+      throw new Error('User verification failed');
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     if (updateError) throw updateError;
+
+    await supabase.auth.signOut();
   };
 
   const signOut = async () => {

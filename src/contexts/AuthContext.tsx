@@ -6,10 +6,12 @@ type AuthContextType = {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, employeeId: string) => Promise<void>;
+  signUpWithOTP: (email: string, fullName: string, employeeId: string) => Promise<void>;
+  verifyOTPAndCreateAccount: (email: string, token: string, password: string, fullName: string, employeeId: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  sendPasswordResetOTP: (email: string) => Promise<void>;
+  resetPasswordWithOTP: (email: string, token: string, newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,21 +44,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const checkForPasswordRecovery = () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
-      return type === 'recovery';
-    };
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       (async () => {
-        if (checkForPasswordRecovery()) {
-          setUser(session?.user ?? null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-
         setUser(session?.user ?? null);
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);
@@ -68,12 +57,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
-        if (event === 'PASSWORD_RECOVERY') {
-          setUser(session?.user ?? null);
-          setProfile(null);
-          return;
-        }
-
         setUser(session?.user ?? null);
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);
@@ -87,42 +70,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, employeeId: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            employee_id: employeeId,
-            is_admin: false,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.user && !data.session) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          email,
+  const signUpWithOTP = async (email: string, fullName: string, employeeId: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        data: {
           full_name: fullName,
           employee_id: employeeId,
-          is_admin: false,
-        });
+        },
+      },
+    });
 
-        if (profileError && profileError.code !== '23505') {
-          throw profileError;
-        }
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.message.includes('duplicate key') || err.message.includes('already registered')) {
+    if (error) throw error;
+  };
+
+  const verifyOTPAndCreateAccount = async (
+    email: string,
+    token: string,
+    password: string,
+    fullName: string,
+    employeeId: string
+  ) => {
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
+
+    if (verifyError) throw verifyError;
+
+    if (!verifyData.user) {
+      throw new Error('User verification failed');
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (updateError) throw updateError;
+
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', verifyData.user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: verifyData.user.id,
+        email,
+        full_name: fullName,
+        employee_id: employeeId,
+        is_admin: false,
+      });
+
+      if (profileError) {
+        if (profileError.code === '23505') {
           throw new Error('This employee ID is already registered. Please use a different employee ID.');
         }
+        throw profileError;
       }
-      throw err;
     }
   };
 
@@ -135,12 +142,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
   };
 
-  const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
+  const sendPasswordResetOTP = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+      },
     });
 
     if (error) throw error;
+  };
+
+  const resetPasswordWithOTP = async (email: string, token: string, newPassword: string) => {
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
+    });
+
+    if (verifyError) throw verifyError;
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) throw updateError;
   };
 
   const signOut = async () => {
@@ -149,7 +175,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, resetPassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        signUpWithOTP,
+        verifyOTPAndCreateAccount,
+        signIn,
+        signOut,
+        sendPasswordResetOTP,
+        resetPasswordWithOTP,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

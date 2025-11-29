@@ -33,7 +33,9 @@ import {
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'admin' | 'reports' | 'admin-orders'>('menu');
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'admin' | 'reports' | 'admin-orders'>(
+    profile?.is_admin ? 'admin' : 'menu'
+  );
   const [cart, setCart] = useState<Map<string, { item: MenuItem; quantity: number }>>(new Map());
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { MassageService, MassageBooking } from '../lib/types';
+import { MassageService, MassageBooking as MassageBookingType } from '../lib/types';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 export const MassageBooking = () => {
   const { user } = useAuth();
   const [services, setServices] = useState<MassageService[]>([]);
-  const [bookings, setBookings] = useState<MassageBooking[]>([]);
+  const [bookings, setBookings] = useState<MassageBookingType[]>([]);
   const [selectedService, setSelectedService] = useState<string>('');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');

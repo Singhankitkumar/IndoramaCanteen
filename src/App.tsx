@@ -14,6 +14,9 @@ import { MassageBooking } from './components/MassageBooking';
 import { Beverages } from './components/Beverages';
 import { EstateRequests } from './components/EstateRequests';
 import { AdminOrderManagement } from './components/AdminOrderManagement';
+import { AdminRoleManagement } from './components/AdminRoleManagement';
+import { WeeklyMenuManagement } from './components/WeeklyMenuManagement';
+import { HomeMealOrders } from './components/HomeMealOrders';
 import { MenuItem, supabase } from './lib/supabase';
 import { PartyOrder } from './lib/types';
 import {
@@ -29,11 +32,13 @@ import {
   Sparkles,
   Home,
   ClipboardList,
+  Users,
+  Calendar,
 } from 'lucide-react';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'admin' | 'reports' | 'admin-orders'>(
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'home-meals' | 'admin' | 'reports' | 'admin-orders' | 'admin-roles' | 'weekly-menu'>(
     profile?.is_admin ? 'admin' : 'menu'
   );
   const [cart, setCart] = useState<Map<string, { item: MenuItem; quantity: number }>>(new Map());
@@ -254,6 +259,17 @@ function AppContent() {
                   Estate
                 </button>
                 <button
+                  onClick={() => setActiveTab('home-meals')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'home-meals'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Home className="w-5 h-5" />
+                  Home Meals
+                </button>
+                <button
                   onClick={() => setActiveTab('billing')}
                   className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
                     activeTab === 'billing'
@@ -301,6 +317,28 @@ function AppContent() {
                   <ClipboardList className="w-5 h-5" />
                   Order Management
                 </button>
+                <button
+                  onClick={() => setActiveTab('weekly-menu')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'weekly-menu'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Calendar className="w-5 h-5" />
+                  Weekly Menu
+                </button>
+                <button
+                  onClick={() => setActiveTab('admin-roles')}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === 'admin-roles'
+                      ? 'border-b-2 border-orange-600 text-orange-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  <Users className="w-5 h-5" />
+                  User Roles
+                </button>
               </>
             )}
           </div>
@@ -331,10 +369,13 @@ function AppContent() {
         {activeTab === 'massage' && !profile?.is_admin && <MassageBooking />}
         {activeTab === 'beverages' && !profile?.is_admin && <Beverages />}
         {activeTab === 'estate' && !profile?.is_admin && <EstateRequests />}
+        {activeTab === 'home-meals' && !profile?.is_admin && <HomeMealOrders />}
         {activeTab === 'billing' && !profile?.is_admin && <BillingStatement />}
         {activeTab === 'reports' && profile?.is_admin && <ConsumptionReports />}
         {activeTab === 'admin' && profile?.is_admin && <AdminPanel />}
         {activeTab === 'admin-orders' && profile?.is_admin && <AdminOrderManagement />}
+        {activeTab === 'weekly-menu' && profile?.is_admin && <WeeklyMenuManagement />}
+        {activeTab === 'admin-roles' && profile?.is_admin && <AdminRoleManagement />}
       </main>
 
       <Cart

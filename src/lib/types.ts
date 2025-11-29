@@ -149,3 +149,54 @@ export type EstateRequest = {
   created_at: string;
   updated_at: string;
 };
+
+export type AdminRoleAudit = {
+  id: string;
+  user_id: string;
+  changed_by_admin_id: string | null;
+  previous_role: boolean;
+  new_role: boolean;
+  reason: string;
+  created_at: string;
+};
+
+export type WeeklyMenu = {
+  id: string;
+  item_name: string;
+  description: string;
+  price: number;
+  is_veg: boolean;
+  day_of_week: number;
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+  image_url: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HomeMealOrder = {
+  id: string;
+  user_id: string;
+  ordered_by_admin_id: string | null;
+  total_amount: number;
+  delivery_charge: number;
+  building: string;
+  flat_no: string;
+  landmark: string;
+  pin_code: string;
+  status: 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  notes: string;
+  order_time: string;
+  delivery_time: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HomeMealOrderItem = {
+  id: string;
+  home_meal_order_id: string;
+  menu_item_id: string;
+  quantity: number;
+  price: number;
+  created_at: string;
+};

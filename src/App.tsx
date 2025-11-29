@@ -14,7 +14,6 @@ import { MassageBooking } from './components/MassageBooking';
 import { Beverages } from './components/Beverages';
 import { EstateRequests } from './components/EstateRequests';
 import { AdminOrderManagement } from './components/AdminOrderManagement';
-import { AdminRoleManagement } from './components/AdminRoleManagement';
 import { WeeklyMenuManagement } from './components/WeeklyMenuManagement';
 import { HomeMealOrders } from './components/HomeMealOrders';
 import { AdminPlaceOrder } from './components/AdminPlaceOrder';
@@ -35,13 +34,12 @@ import {
   Sparkles,
   Home,
   ClipboardList,
-  Users,
   Calendar,
 } from 'lucide-react';
 
 function AppContent() {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'home-meals' | 'general-orders' | 'admin' | 'reports' | 'admin-orders' | 'admin-roles' | 'weekly-menu' | 'admin-place-order'>(
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'party' | 'billing' | 'massage' | 'beverages' | 'estate' | 'home-meals' | 'general-orders' | 'admin' | 'reports' | 'admin-orders' | 'weekly-menu' | 'admin-place-order'>(
     profile?.is_admin ? 'admin' : 'menu'
   );
   const [cart, setCart] = useState<Map<string, { item: MenuItem; quantity: number }>>(new Map());
@@ -353,17 +351,6 @@ function AppContent() {
                   <Calendar className="w-5 h-5" />
                   Weekly Menu
                 </button>
-                <button
-                  onClick={() => setActiveTab('admin-roles')}
-                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${
-                    activeTab === 'admin-roles'
-                      ? 'border-b-2 border-orange-600 text-orange-600'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  <Users className="w-5 h-5" />
-                  User Roles
-                </button>
               </>
             )}
           </div>
@@ -402,7 +389,6 @@ function AppContent() {
         {activeTab === 'admin-place-order' && profile?.is_admin && <AdminPlaceOrder />}
         {activeTab === 'admin-orders' && profile?.is_admin && <UnifiedOrderManagement />}
         {activeTab === 'weekly-menu' && profile?.is_admin && <WeeklyMenuManagement />}
-        {activeTab === 'admin-roles' && profile?.is_admin && <AdminRoleManagement />}
       </main>
 
       <Cart
